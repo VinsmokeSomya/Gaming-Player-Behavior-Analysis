@@ -39,7 +39,12 @@
   - Write unit tests for ETL transformations with known input/output pairs
   - _Requirements: 1.1, 1.2, 5.2_
 
-- [ ] 4. Create SQL query engine for retention analysis
+- [x] 4. Create SQL query engine for retention analysis
+
+
+
+
+
   - Implement parameterized SQL queries for retention rate calculations
   - Build query functions for player segmentation and filtering
   - Create optimized queries for drop-off analysis by game level
