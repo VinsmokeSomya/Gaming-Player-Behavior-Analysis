@@ -39,8 +39,8 @@ Transform raw gaming data into actionable business insights with our production-
 
 ```bash
 # 1. Clone and setup
-git clone <your-repo-url>
-cd "Gaming-Player Behavior Analysis"
+git clone https://github.com/VinsmokeSomya/Gaming-Player-Behavior-Analysis.git
+cd "Gaming-Player-Behavior-Analysis"
 
 # 2. Install dependencies
 python -m venv .venv
