@@ -1,6 +1,6 @@
 """Analytics module for player retention analysis."""
 
-from .query_engine import (
+from src.analytics.query_engine import (
     RetentionQueryEngine,
     RetentionQueryResult,
     DropOffAnalysisResult,

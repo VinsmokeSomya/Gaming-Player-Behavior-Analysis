@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from ..database import db_manager
+from src.database import db_manager
 
 logger = logging.getLogger(__name__)
 
