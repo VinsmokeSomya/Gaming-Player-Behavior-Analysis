@@ -49,7 +49,7 @@ logs/
 data/full/
 data/sample/
 *.csv
-
+!online_gaming_behavior_dataset.csv
 # Docker
 .env
 
