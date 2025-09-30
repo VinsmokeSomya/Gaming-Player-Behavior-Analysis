@@ -1,4 +1,13 @@
-# 🎮 Player Retention Analytics Dashboard
+<div align="center">
+  🚩🧡🕉️ || जय श्री राम || 🕉️🧡🚩
+</div>
+
+---
+<div align="center">
+  <h1 style="border-bottom: none;">
+    🎮 Player Retention Analytics Dashboard
+  </h1>
+</div>
 
 > **A comprehensive analytics system for mobile games that analyzes real player behavior data, predicts churn risk, and provides actionable insights through interactive visualizations.**
 
