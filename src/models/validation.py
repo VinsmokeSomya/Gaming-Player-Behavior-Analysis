@@ -1,205 +1,215 @@
 """
-Data validation functions for player events and metrics.
+Validation functions for player data and analytics models.
 """
+
 from datetime import datetime, date
 from typing import Dict, Any, List, Optional
 import re
 
 
-def validate_player_event(event_data: Dict[str, Any]) -> bool:
-    """
-    Validate player event data structure and values.
-    
-    Args:
-        event_data: Dictionary containing player event data
-        
-    Returns:
-        bool: True if valid, raises ValueError if invalid
-        
-    Raises:
-        ValueError: If validation fails
-    """
+def validate_player_event(event: Dict[str, Any]) -> bool:
+    """Validate a player event dictionary."""
     required_fields = ['player_id', 'event_type', 'timestamp']
     
     # Check required fields
     for field in required_fields:
-        if field not in event_data:
+        if field not in event:
             raise ValueError(f"Missing required field: {field}")
     
-    # Validate player_id
-    player_id = event_data['player_id']
-    if not isinstance(player_id, str) or not player_id:
+    # Validate player_id format
+    if not isinstance(event['player_id'], str) or not event['player_id'].strip():
         raise ValueError("player_id must be a non-empty string")
     
-    if not re.match(r'^[a-zA-Z0-9_-]+$', player_id):
-        raise ValueError("player_id must contain only alphanumeric characters, underscores, and hyphens")
-    
     # Validate event_type
-    event_type = event_data['event_type']
     valid_event_types = [
-        'session_start', 'session_end', 'level_complete', 'level_fail',
-        'purchase', 'achievement_unlock', 'tutorial_complete', 'app_install'
+        'session_start', 'session_end', 'level_complete', 
+        'purchase', 'achievement_unlock', 'tutorial_complete'
     ]
-    
-    if not isinstance(event_type, str) or event_type not in valid_event_types:
-        raise ValueError(f"event_type must be one of: {', '.join(valid_event_types)}")
+    if event['event_type'] not in valid_event_types:
+        raise ValueError(f"Invalid event_type: {event['event_type']}. Must be one of {valid_event_types}")
     
     # Validate timestamp
-    timestamp = event_data['timestamp']
-    if isinstance(timestamp, str):
-        try:
-            datetime.fromisoformat(timestamp)
-        except ValueError:
-            raise ValueError("timestamp must be a valid ISO format datetime string")
-    elif not isinstance(timestamp, datetime):
-        raise ValueError("timestamp must be a datetime object or ISO format string")
+    if not isinstance(event['timestamp'], (datetime, str)):
+        raise ValueError("timestamp must be datetime object or ISO string")
     
-    # Validate optional fields if present
-    if 'level' in event_data:
-        level = event_data['level']
-        if not isinstance(level, int) or level < 1:
-            raise ValueError("level must be a positive integer")
-    
-    if 'purchase_amount' in event_data:
-        amount = event_data['purchase_amount']
-        if not isinstance(amount, (int, float)) or amount < 0:
+    # Validate event-specific fields
+    if event['event_type'] == 'purchase':
+        if 'purchase_amount' not in event:
+            raise ValueError("purchase events must have purchase_amount field")
+        if not isinstance(event['purchase_amount'], (int, float)) or event['purchase_amount'] < 0:
             raise ValueError("purchase_amount must be a non-negative number")
     
-    if 'session_duration' in event_data:
-        duration = event_data['session_duration']
-        if not isinstance(duration, (int, float)) or duration < 0:
-            raise ValueError("session_duration must be a non-negative number")
+    if event['event_type'] == 'level_complete':
+        if 'level' not in event:
+            raise ValueError("level_complete events must have level field")
+        if not isinstance(event['level'], int) or event['level'] < 1:
+            raise ValueError("level must be a positive integer")
+    
+    if event['event_type'] in ['session_start', 'session_end']:
+        if 'session_duration' in event:
+            if not isinstance(event['session_duration'], (int, float)) or event['session_duration'] < 0:
+                raise ValueError("session_duration must be a non-negative number")
     
     return True
 
 
-def validate_retention_calculation(retention_data: Dict[str, Any]) -> bool:
-    """
-    Validate retention calculation input data.
+def validate_retention_calculation(cohort_data: List[Dict[str, Any]]) -> bool:
+    """Validate cohort retention calculation data."""
+    if not cohort_data:
+        raise ValueError("Cohort data cannot be empty")
     
-    Args:
-        retention_data: Dictionary containing retention calculation parameters
+    required_fields = ['cohort_date', 'period', 'retention_rate', 'cohort_size']
+    
+    for i, record in enumerate(cohort_data):
+        for field in required_fields:
+            if field not in record:
+                raise ValueError(f"Record {i}: Missing required field {field}")
         
-    Returns:
-        bool: True if valid, raises ValueError if invalid
+        # Validate retention_rate
+        if not isinstance(record['retention_rate'], (int, float)):
+            raise ValueError(f"Record {i}: retention_rate must be numeric")
+        if record['retention_rate'] < 0 or record['retention_rate'] > 1:
+            raise ValueError(f"Record {i}: retention_rate must be between 0 and 1")
         
-    Raises:
-        ValueError: If validation fails
-    """
-    required_fields = ['cohort_date', 'retention_period', 'player_count']
-    
-    # Check required fields
-    for field in required_fields:
-        if field not in retention_data:
-            raise ValueError(f"Missing required field: {field}")
-    
-    # Validate cohort_date
-    cohort_date = retention_data['cohort_date']
-    if isinstance(cohort_date, str):
-        try:
-            date.fromisoformat(cohort_date)
-        except ValueError:
-            raise ValueError("cohort_date must be a valid ISO format date string")
-    elif not isinstance(cohort_date, date):
-        raise ValueError("cohort_date must be a date object or ISO format string")
-    
-    # Validate retention_period
-    retention_period = retention_data['retention_period']
-    valid_periods = [1, 7, 30]
-    if retention_period not in valid_periods:
-        raise ValueError(f"retention_period must be one of: {valid_periods}")
-    
-    # Validate player_count
-    player_count = retention_data['player_count']
-    if not isinstance(player_count, int) or player_count < 0:
-        raise ValueError("player_count must be a non-negative integer")
+        # Validate cohort_size
+        if not isinstance(record['cohort_size'], int) or record['cohort_size'] < 0:
+            raise ValueError(f"Record {i}: cohort_size must be a non-negative integer")
+        
+        # Validate period
+        if not isinstance(record['period'], int) or record['period'] < 0:
+            raise ValueError(f"Record {i}: period must be a non-negative integer")
     
     return True
 
 
-def validate_metric_thresholds(metrics: Dict[str, float], thresholds: Dict[str, float]) -> List[str]:
-    """
-    Validate metrics against defined thresholds and return warnings.
+def validate_metric_thresholds(metrics: Dict[str, float]) -> bool:
+    """Validate analytics metric thresholds."""
+    valid_metrics = {
+        'churn_risk_threshold': (0.0, 1.0),
+        'engagement_threshold': (0.0, float('inf')),
+        'revenue_threshold': (0.0, float('inf')),
+        'session_threshold': (0, float('inf'))
+    }
     
-    Args:
-        metrics: Dictionary of metric names to values
-        thresholds: Dictionary of metric names to threshold values
+    for metric_name, value in metrics.items():
+        if metric_name not in valid_metrics:
+            raise ValueError(f"Unknown metric: {metric_name}")
         
-    Returns:
-        List[str]: List of warning messages for metrics below thresholds
-    """
-    warnings = []
+        min_val, max_val = valid_metrics[metric_name]
+        if not isinstance(value, (int, float)):
+            raise ValueError(f"{metric_name} must be numeric")
+        if value < min_val or value > max_val:
+            raise ValueError(f"{metric_name} must be between {min_val} and {max_val}")
     
-    for metric_name, threshold in thresholds.items():
-        if metric_name in metrics:
-            value = metrics[metric_name]
-            if not isinstance(value, (int, float)):
-                warnings.append(f"Invalid metric value for {metric_name}: must be numeric")
-            elif value < threshold:
-                warnings.append(f"Metric {metric_name} ({value:.3f}) is below threshold ({threshold:.3f})")
-    
-    return warnings
+    return True
 
 
-def validate_date_range(start_date: date, end_date: date, max_days: int = 365) -> bool:
-    """
-    Validate date range for analytics queries.
-    
-    Args:
-        start_date: Start date of the range
-        end_date: End date of the range
-        max_days: Maximum allowed days in range
-        
-    Returns:
-        bool: True if valid, raises ValueError if invalid
-        
-    Raises:
-        ValueError: If validation fails
-    """
+def validate_date_range(start_date: date, end_date: date) -> bool:
+    """Validate date range for analytics queries."""
     if not isinstance(start_date, date):
         raise ValueError("start_date must be a date object")
-    
     if not isinstance(end_date, date):
         raise ValueError("end_date must be a date object")
     
     if start_date > end_date:
         raise ValueError("start_date cannot be after end_date")
     
-    days_diff = (end_date - start_date).days
-    if days_diff > max_days:
-        raise ValueError(f"Date range cannot exceed {max_days} days")
+    # Check for reasonable date range (not too far in past/future)
+    today = date.today()
+    max_past_days = 365 * 3  # 3 years
+    max_future_days = 30     # 30 days
+    
+    if (today - start_date).days > max_past_days:
+        raise ValueError(f"start_date cannot be more than {max_past_days} days in the past")
+    
+    if (end_date - today).days > max_future_days:
+        raise ValueError(f"end_date cannot be more than {max_future_days} days in the future")
     
     return True
 
 
 def sanitize_player_segment(segment: str) -> str:
-    """
-    Sanitize and validate player segment string.
-    
-    Args:
-        segment: Raw segment string
-        
-    Returns:
-        str: Sanitized segment string
-        
-    Raises:
-        ValueError: If segment is invalid
-    """
+    """Sanitize and validate player segment string."""
     if not isinstance(segment, str):
-        raise ValueError("segment must be a string")
+        raise ValueError("Player segment must be a string")
     
-    # Remove whitespace and convert to lowercase
+    # Clean the segment string
     segment = segment.strip().lower()
     
-    if not segment:
-        raise ValueError("segment cannot be empty")
+    # Validate against allowed segments
+    valid_segments = ['new', 'casual', 'core', 'premium', 'churned', 'returning']
     
-    # Replace spaces with underscores and remove invalid characters
-    segment = re.sub(r'[^a-zA-Z0-9_-]', '_', segment)
-    segment = re.sub(r'_+', '_', segment)  # Replace multiple underscores with single
-    segment = segment.strip('_')  # Remove leading/trailing underscores
-    
-    if not segment:
-        raise ValueError("segment contains no valid characters")
+    if segment not in valid_segments:
+        # Try to map common variations
+        segment_mapping = {
+            'beginner': 'new',
+            'starter': 'new',
+            'regular': 'casual',
+            'active': 'core',
+            'engaged': 'core',
+            'vip': 'premium',
+            'whale': 'premium',
+            'inactive': 'churned',
+            'lapsed': 'churned'
+        }
+        
+        if segment in segment_mapping:
+            segment = segment_mapping[segment]
+        else:
+            raise ValueError(f"Invalid player segment: {segment}. Must be one of {valid_segments}")
     
     return segment
+
+
+def validate_player_id(player_id: str) -> bool:
+    """Validate player ID format."""
+    if not isinstance(player_id, str):
+        raise ValueError("Player ID must be a string")
+    
+    if not player_id.strip():
+        raise ValueError("Player ID cannot be empty")
+    
+    # Check for reasonable length
+    if len(player_id) > 100:
+        raise ValueError("Player ID too long (max 100 characters)")
+    
+    # Check for valid characters (alphanumeric, underscore, hyphen)
+    if not re.match(r'^[a-zA-Z0-9_-]+$', player_id):
+        raise ValueError("Player ID can only contain letters, numbers, underscores, and hyphens")
+    
+    return True
+
+
+def validate_churn_features(features: Dict[str, Any]) -> bool:
+    """Validate churn prediction features."""
+    required_fields = [
+        'player_id', 'days_since_last_session', 'sessions_last_7_days',
+        'avg_session_duration_minutes', 'levels_completed_last_week',
+        'purchases_last_30_days', 'social_connections'
+    ]
+    
+    for field in required_fields:
+        if field not in features:
+            raise ValueError(f"Missing required churn feature: {field}")
+    
+    # Validate numeric fields
+    numeric_fields = {
+        'days_since_last_session': (0, 365),
+        'sessions_last_7_days': (0, 1000),
+        'avg_session_duration_minutes': (0, 1440),  # Max 24 hours
+        'levels_completed_last_week': (0, 1000),
+        'purchases_last_30_days': (0, 10000),
+        'social_connections': (0, 10000)
+    }
+    
+    for field, (min_val, max_val) in numeric_fields.items():
+        value = features[field]
+        if not isinstance(value, (int, float)):
+            raise ValueError(f"{field} must be numeric")
+        if value < min_val or value > max_val:
+            raise ValueError(f"{field} must be between {min_val} and {max_val}")
+    
+    # Validate player_id
+    validate_player_id(features['player_id'])
+    
+    return True

@@ -6,61 +6,136 @@ import pandas as pd
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
+import logging
+import uuid
 
 from ..models import PlayerProfile, ChurnFeatures, validate_player_event
+from ..validation import DataQualityValidator, ValidationSeverity
+from .dead_letter_queue import dlq, ETLJobWrapper, FailureReason
+
+logger = logging.getLogger(__name__)
 
 
 class DataLoader:
-    """Loads and validates data from various sources."""
+    """Loads and validates data from various sources with error handling."""
     
     def __init__(self, data_dir: str = "data/sample"):
         """Initialize data loader with data directory."""
         self.data_dir = Path(data_dir)
+        self.validator = DataQualityValidator()
+        self.job_wrapper = ETLJobWrapper(dlq)
         
     def load_player_profiles(self) -> List[PlayerProfile]:
-        """Load and validate player profiles from JSON."""
-        profiles_file = self.data_dir / "player_profiles.json"
+        """Load and validate player profiles from JSON with error handling."""
+        job_id = f"load_profiles_{uuid.uuid4().hex[:8]}"
         
-        if not profiles_file.exists():
-            raise FileNotFoundError(f"Player profiles file not found: {profiles_file}")
-        
-        with open(profiles_file, 'r') as f:
-            profiles_data = json.load(f)
-        
-        profiles = []
-        for profile_data in profiles_data:
-            # Convert ISO strings back to datetime objects
-            for field in ['registration_date', 'last_active_date', 'churn_prediction_date']:
-                if isinstance(profile_data[field], str):
-                    profile_data[field] = datetime.fromisoformat(profile_data[field])
+        def _load_profiles_job(data_dir):
+            profiles_file = data_dir / "player_profiles.json"
             
-            profile = PlayerProfile.from_dict(profile_data)
-            profiles.append(profile)
+            if not profiles_file.exists():
+                raise FileNotFoundError(f"Player profiles file not found: {profiles_file}")
+            
+            try:
+                with open(profiles_file, 'r') as f:
+                    profiles_data = json.load(f)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON in profiles file: {e}")
+            
+            profiles = []
+            validation_errors = []
+            
+            for i, profile_data in enumerate(profiles_data):
+                try:
+                    # Convert ISO strings back to datetime objects
+                    for field in ['registration_date', 'last_active_date', 'churn_prediction_date']:
+                        if isinstance(profile_data[field], str):
+                            profile_data[field] = datetime.fromisoformat(profile_data[field])
+                    
+                    profile = PlayerProfile.from_dict(profile_data)
+                    profiles.append(profile)
+                    
+                except Exception as e:
+                    validation_errors.append(f"Profile {i}: {e}")
+            
+            # Check validation error threshold
+            if validation_errors:
+                error_rate = len(validation_errors) / len(profiles_data)
+                if error_rate > 0.1:  # More than 10% errors
+                    raise ValueError(f"Too many profile validation errors ({error_rate:.1%}): {validation_errors[:5]}")
+                else:
+                    logger.warning(f"Profile validation errors ({error_rate:.1%}): {validation_errors[:3]}")
+            
+            logger.info(f"Loaded {len(profiles)} player profiles with {len(validation_errors)} validation errors")
+            return profiles
         
-        return profiles
+        return self.job_wrapper.execute_job(
+            job_id=job_id,
+            job_type="load_player_profiles",
+            job_func=_load_profiles_job,
+            input_data=self.data_dir,
+            timeout_seconds=60
+        )
     
     def load_player_events(self) -> List[Dict[str, Any]]:
-        """Load and validate player events from JSON."""
-        events_file = self.data_dir / "player_events.json"
+        """Load and validate player events from JSON with error handling."""
+        job_id = f"load_events_{uuid.uuid4().hex[:8]}"
         
-        if not events_file.exists():
-            raise FileNotFoundError(f"Player events file not found: {events_file}")
-        
-        with open(events_file, 'r') as f:
-            events_data = json.load(f)
-        
-        # Validate and convert events
-        validated_events = []
-        for event in events_data:
-            # Convert timestamp string to datetime
-            if isinstance(event['timestamp'], str):
-                event['timestamp'] = datetime.fromisoformat(event['timestamp'])
+        def _load_events_job(data_dir):
+            events_file = data_dir / "player_events.json"
             
-            # Validate event structure
-            validate_player_event(event)
-            validated_events.append(event)
+            if not events_file.exists():
+                raise FileNotFoundError(f"Player events file not found: {events_file}")
+            
+            try:
+                with open(events_file, 'r') as f:
+                    events_data = json.load(f)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON in events file: {e}")
+            
+            # Validate and convert events
+            validated_events = []
+            validation_errors = []
+            
+            for i, event in enumerate(events_data):
+                try:
+                    # Convert timestamp string to datetime
+                    if isinstance(event['timestamp'], str):
+                        event['timestamp'] = datetime.fromisoformat(event['timestamp'])
+                    
+                    # Validate event structure
+                    validate_player_event(event)
+                    validated_events.append(event)
+                    
+                except Exception as e:
+                    validation_errors.append(f"Event {i}: {e}")
+            
+            # Check validation error threshold
+            if validation_errors:
+                error_rate = len(validation_errors) / len(events_data)
+                if error_rate > 0.05:  # More than 5% errors
+                    raise ValueError(f"Too many event validation errors ({error_rate:.1%}): {validation_errors[:5]}")
+                else:
+                    logger.warning(f"Event validation errors ({error_rate:.1%}): {validation_errors[:3]}")
+            
+            # Run data quality validation
+            events_df = pd.DataFrame(validated_events)
+            quality_results = self.validator.validate_events_data(events_df)
+            
+            # Check for critical quality issues
+            critical_issues = [r for r in quality_results if not r.passed and r.severity == ValidationSeverity.CRITICAL]
+            if critical_issues:
+                raise ValueError(f"Critical data quality issues: {[r.message for r in critical_issues]}")
+            
+            logger.info(f"Loaded {len(validated_events)} player events with {len(validation_errors)} validation errors")
+            return validated_events
         
-        return validated_events
+        return self.job_wrapper.execute_job(
+            job_id=job_id,
+            job_type="load_player_events",
+            job_func=_load_events_job,
+            input_data=self.data_dir,
+            timeout_seconds=120
+        )
     
     def load_churn_features(self) -> List[ChurnFeatures]:
         """Load and validate churn features from JSON."""

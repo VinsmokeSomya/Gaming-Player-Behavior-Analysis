@@ -7,6 +7,16 @@ from dash import html, dcc
 import plotly.graph_objects as go
 import plotly.express as px
 from typing import Dict, Any, List, Optional
+import logging
+
+from .error_handling import (
+    handle_visualization_errors, 
+    handle_component_errors,
+    visualization_cache,
+    health_checker
+)
+
+logger = logging.getLogger(__name__)
 
 
 class DashTheme:
@@ -40,16 +50,26 @@ class ComponentFactory:
     """Factory class for creating consistent Dash components."""
     
     @staticmethod
+    @handle_component_errors("Card Component")
     def create_card(title: str, content: Any, card_id: str = None) -> dbc.Card:
-        """Create a styled card component."""
-        card_props = {"style": DashTheme.CARD_MARGIN}
-        if card_id is not None:
-            card_props["id"] = card_id
+        """Create a styled card component with error handling."""
+        try:
+            card_props = {"style": DashTheme.CARD_MARGIN}
+            if card_id is not None:
+                card_props["id"] = card_id
             
-        return dbc.Card([
-            dbc.CardHeader(html.H5(title, className="mb-0")),
-            dbc.CardBody(content)
-        ], **card_props)
+            result = dbc.Card([
+                dbc.CardHeader(html.H5(title, className="mb-0")),
+                dbc.CardBody(content)
+            ], **card_props)
+            
+            health_checker.record_success("card_component")
+            return result
+            
+        except Exception as e:
+            health_checker.record_error("card_component")
+            logger.error(f"Error creating card component: {e}")
+            raise
     
     @staticmethod
     def create_filter_dropdown(
@@ -113,38 +133,49 @@ class ChartStyler:
     """Utility class for applying consistent chart styling."""
     
     @staticmethod
+    @handle_visualization_errors("base_chart")
     def apply_base_layout(fig: go.Figure, title: str = None) -> go.Figure:
-        """Apply base layout styling to a Plotly figure."""
-        fig.update_layout(
-            font_family=DashTheme.FONT_FAMILY,
-            title_font_size=DashTheme.TITLE_SIZE,
-            title=title,
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            height=DashTheme.CHART_HEIGHT,
-            margin=dict(l=50, r=50, t=80, b=50)
-        )
-        
-        # Update axes styling
-        fig.update_xaxes(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor="lightgray",
-            showline=True,
-            linewidth=1,
-            linecolor="black"
-        )
-        
-        fig.update_yaxes(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor="lightgray",
-            showline=True,
-            linewidth=1,
-            linecolor="black"
-        )
-        
-        return fig
+        """Apply base layout styling to a Plotly figure with error handling."""
+        try:
+            if fig is None:
+                raise ValueError("Figure cannot be None")
+            
+            fig.update_layout(
+                font_family=DashTheme.FONT_FAMILY,
+                title_font_size=DashTheme.TITLE_SIZE,
+                title=title,
+                plot_bgcolor="white",
+                paper_bgcolor="white",
+                height=DashTheme.CHART_HEIGHT,
+                margin=dict(l=50, r=50, t=80, b=50)
+            )
+            
+            # Update axes styling
+            fig.update_xaxes(
+                showgrid=True,
+                gridwidth=1,
+                gridcolor="lightgray",
+                showline=True,
+                linewidth=1,
+                linecolor="black"
+            )
+            
+            fig.update_yaxes(
+                showgrid=True,
+                gridwidth=1,
+                gridcolor="lightgray",
+                showline=True,
+                linewidth=1,
+                linecolor="black"
+            )
+            
+            health_checker.record_success("chart_styling")
+            return fig
+            
+        except Exception as e:
+            health_checker.record_error("chart_styling")
+            logger.error(f"Error applying chart styling: {e}")
+            raise
     
     @staticmethod
     def apply_heatmap_styling(fig: go.Figure, title: str = None) -> go.Figure:

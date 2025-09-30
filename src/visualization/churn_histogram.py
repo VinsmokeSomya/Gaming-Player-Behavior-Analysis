@@ -338,42 +338,4 @@ def create_churn_stats_summary(churn_data: pd.DataFrame) -> dbc.Row:
     ])
 
 
-def generate_sample_churn_data() -> pd.DataFrame:
-    """Generate sample churn data for testing."""
-    np.random.seed(42)
-    
-    # Generate sample data
-    n_players = 10000
-    segments = ['new', 'casual', 'core', 'premium']
-    segment_weights = [0.3, 0.4, 0.2, 0.1]
-    
-    data = []
-    for i in range(n_players):
-        segment = np.random.choice(segments, p=segment_weights)
-        
-        # Different risk profiles for different segments
-        if segment == 'new':
-            base_risk = np.random.beta(2, 3)  # Higher risk for new players
-            days_since = np.random.poisson(3)
-        elif segment == 'casual':
-            base_risk = np.random.beta(3, 4)  # Medium risk
-            days_since = np.random.poisson(5)
-        elif segment == 'core':
-            base_risk = np.random.beta(2, 8)  # Lower risk
-            days_since = np.random.poisson(2)
-        else:  # premium
-            base_risk = np.random.beta(1, 9)  # Lowest risk
-            days_since = np.random.poisson(1)
-        
-        # Add some correlation between days since last session and risk
-        days_factor = min(days_since / 10, 0.5)  # Cap the influence
-        churn_risk = min(base_risk + days_factor, 1.0)
-        
-        data.append({
-            'player_id': f'player_{i:06d}',
-            'churn_risk_score': churn_risk,
-            'segment': segment,
-            'days_since_last_session': days_since
-        })
-    
-    return pd.DataFrame(data)
+# Sample data generation function removed - now using real data from ETL pipeline

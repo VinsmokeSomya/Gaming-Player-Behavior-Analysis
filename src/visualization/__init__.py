@@ -9,30 +9,24 @@ from .components import (
 
 from .cohort_heatmap import (
     CohortHeatmapGenerator,
-    create_cohort_heatmap_component,
-    generate_sample_cohort_data
+    create_cohort_heatmap_component
 )
 
 from .engagement_timeline import (
     EngagementTimelineGenerator,
-    create_engagement_timeline_component,
-    generate_sample_engagement_data
+    create_engagement_timeline_component
 )
 
 from .churn_histogram import (
     ChurnHistogramGenerator,
     create_churn_histogram_component,
-    create_churn_stats_summary,
-    generate_sample_churn_data
+    create_churn_stats_summary
 )
 
 from .dropoff_funnel import (
     DropoffFunnelGenerator,
     create_dropoff_funnel_component,
-    create_funnel_summary_stats,
-    generate_sample_funnel_data,
-    generate_sample_level_data,
-    generate_sample_cohort_funnel_data
+    create_funnel_summary_stats
 )
 
 __all__ = [
@@ -45,24 +39,18 @@ __all__ = [
     # Cohort heatmap
     'CohortHeatmapGenerator',
     'create_cohort_heatmap_component',
-    'generate_sample_cohort_data',
     
     # Engagement timeline
     'EngagementTimelineGenerator',
     'create_engagement_timeline_component',
-    'generate_sample_engagement_data',
     
     # Churn histogram
     'ChurnHistogramGenerator',
     'create_churn_histogram_component',
     'create_churn_stats_summary',
-    'generate_sample_churn_data',
     
     # Drop-off funnel
     'DropoffFunnelGenerator',
     'create_dropoff_funnel_component',
-    'create_funnel_summary_stats',
-    'generate_sample_funnel_data',
-    'generate_sample_level_data',
-    'generate_sample_cohort_funnel_data'
+    'create_funnel_summary_stats'
 ]

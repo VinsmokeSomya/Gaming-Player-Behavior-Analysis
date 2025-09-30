@@ -212,34 +212,4 @@ def create_cohort_heatmap_component(component_id: str = "cohort-heatmap") -> htm
     ])
 
 
-def generate_sample_cohort_data() -> pd.DataFrame:
-    """Generate sample cohort data for testing."""
-    import numpy as np
-    
-    # Generate sample data
-    cohort_dates = pd.date_range(start='2024-01-01', end='2024-03-01', freq='W')
-    periods = list(range(0, 91, 7))  # 0 to 90 days, weekly
-    
-    data = []
-    for cohort_date in cohort_dates:
-        base_size = np.random.randint(1000, 5000)
-        for period in periods:
-            # Simulate retention decay
-            if period == 0:
-                retention_rate = 1.0
-                cohort_size = base_size
-            else:
-                # Exponential decay with some randomness
-                decay_factor = np.exp(-period / 30)  # 30-day half-life
-                retention_rate = decay_factor * np.random.uniform(0.8, 1.2)
-                retention_rate = max(0.01, min(1.0, retention_rate))  # Clamp between 1% and 100%
-                cohort_size = base_size
-            
-            data.append({
-                'cohort_date': cohort_date.strftime('%Y-%m-%d'),
-                'period': period,
-                'retention_rate': retention_rate,
-                'cohort_size': cohort_size
-            })
-    
-    return pd.DataFrame(data)
+# Sample data generation function removed - now using real data from ETL pipeline

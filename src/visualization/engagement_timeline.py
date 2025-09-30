@@ -275,38 +275,4 @@ def create_engagement_timeline_component(component_id: str = "engagement-timelin
     ])
 
 
-def generate_sample_engagement_data() -> pd.DataFrame:
-    """Generate sample engagement data for testing."""
-    import numpy as np
-    
-    # Generate date range
-    dates = pd.date_range(start='2024-01-01', end='2024-03-31', freq='D')
-    
-    data = []
-    base_dau = 10000
-    
-    for i, date in enumerate(dates):
-        # Add some seasonality and trend
-        day_of_week = date.weekday()
-        weekend_factor = 0.8 if day_of_week >= 5 else 1.0
-        trend_factor = 1 + (i / len(dates)) * 0.2  # 20% growth over period
-        noise = np.random.uniform(0.9, 1.1)
-        
-        dau = int(base_dau * weekend_factor * trend_factor * noise)
-        wau = int(dau * 4.5)  # Approximate weekly actives
-        mau = int(dau * 15)   # Approximate monthly actives
-        
-        # Session metrics
-        avg_session_duration = np.random.uniform(8, 15)  # 8-15 minutes
-        sessions_per_user = np.random.uniform(1.5, 3.0)  # 1.5-3 sessions per day
-        
-        data.append({
-            'date': date,
-            'dau': dau,
-            'wau': wau,
-            'mau': mau,
-            'avg_session_duration': avg_session_duration,
-            'sessions_per_user': sessions_per_user
-        })
-    
-    return pd.DataFrame(data)
+# Sample data generation function removed - now using real data from ETL pipeline
