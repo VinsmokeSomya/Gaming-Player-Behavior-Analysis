@@ -51,7 +51,11 @@
   - Write unit tests to validate query results against expected outcomes
   - _Requirements: 1.1, 1.2, 1.3, 4.1, 4.2_
 
-- [ ] 5. Implement churn prediction machine learning pipeline
+- [x] 5. Implement churn prediction machine learning pipeline
+
+
+
+
   - Create feature engineering functions for churn prediction model
   - Implement scikit-learn model training pipeline with Random Forest and Gradient Boosting
   - Build model evaluation and cross-validation functions
