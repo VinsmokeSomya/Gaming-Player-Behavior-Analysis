@@ -232,6 +232,7 @@ class EventIngestion:
         for col in numeric_columns:
             if col in daily_summary.columns:
                 daily_summary[col] = daily_summary[col].fillna(0)
+                daily_summary[col] = daily_summary[col].astype('float64')
         
         return daily_summary
     

@@ -26,7 +26,11 @@
   - Write unit tests for data model validation and serialization
   - _Requirements: 1.1, 2.2, 5.2_
 
-- [ ] 3. Build ETL pipeline for player data processing
+- [x] 3. Build ETL pipeline for player data processing
+
+
+
+
 
 
   - Implement event ingestion functions to process raw player events
