@@ -10,7 +10,7 @@ The system uses a three-tier architecture:
 
 1. **Data Layer**: SQL database with optimized schemas for player events and analytics
 2. **Processing Layer**: Python-based analytics engine with scikit-learn ML models
-3. **Presentation Layer**: Interactive dashboard with Matplotlib-based visualizations
+3. **Presentation Layer**: Interactive web dashboard with Dash/Plotly visualizations
 
 ```mermaid
 graph TB
@@ -73,14 +73,18 @@ graph TB
   - Segment-based retention comparisons
 
 ### Visualization Engine
-- **Purpose**: Generates interactive charts and reports
-- **Framework**: Matplotlib with custom styling for game analytics
+- **Purpose**: Provides interactive web-based analytics dashboard
+- **Framework**: Dash (Plotly) with responsive Bootstrap components for professional UI
 - **Chart Types**:
-  - Retention curves and cohort heatmaps
-  - Player engagement timeline charts
-  - Churn risk distribution histograms
-  - Drop-off funnel visualizations
-- **Interactivity**: Date range filters, player segment selection, drill-down capabilities
+  - Interactive retention curves and cohort heatmaps with hover details and zoom
+  - Dynamic player engagement timeline charts with date range selection
+  - Real-time churn risk distribution histograms with segment filtering
+  - Clickable drop-off funnel visualizations with level drill-down
+- **Interactivity**: 
+  - Cross-filtering between charts (click one chart to filter others)
+  - Real-time data refresh and live updates
+  - Multi-page navigation with drill-down analysis
+  - Responsive design for desktop and mobile viewing
 
 ## Data Models
 

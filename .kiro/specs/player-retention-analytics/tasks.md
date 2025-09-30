@@ -66,19 +66,22 @@
   - Write unit tests for performance monitoring and retraining logic
   - _Requirements: 2.1, 2.3_
 
-- [ ] 7. Create visualization engine with Matplotlib
-  - Implement cohort retention heatmap generation functions
-  - Build player engagement timeline chart creation
-  - Create churn risk distribution histogram functions
-  - Implement drop-off funnel visualization with game level analysis
-  - Write unit tests for chart generation with mock data
+- [ ] 7. Create interactive visualization components with Plotly/Dash
+  - Implement interactive cohort retention heatmap with hover details and zoom
+  - Build dynamic player engagement timeline charts with date range selection
+  - Create interactive churn risk distribution histograms with segment filtering
+  - Implement drop-off funnel visualization with clickable level drill-down
+  - Build reusable Dash component library for consistent styling
+  - Write unit tests for Plotly chart generation and data formatting
   - _Requirements: 3.1, 3.2, 3.3, 3.5, 4.3_
 
-- [ ] 8. Implement interactive filtering and drill-down capabilities
-  - Create date range filtering functions for all visualizations
-  - Build player segment selection and filtering logic
-  - Implement drill-down functionality for detailed analysis
-  - Write unit tests for filtering and interactivity features
+- [ ] 8. Build Dash web application with interactive controls
+  - Create Dash app layout with navigation and responsive design
+  - Implement interactive date range pickers and segment dropdown filters
+  - Build cross-filtering between charts (click one chart to filter others)
+  - Create drill-down pages for detailed cohort and player analysis
+  - Add real-time data refresh capabilities with callback functions
+  - Write integration tests for Dash app functionality and user interactions
   - _Requirements: 1.3, 3.4_
 
 - [ ] 9. Build automated reporting system
@@ -104,10 +107,11 @@
   - Test visualization rendering speed with various data sizes
   - _Requirements: 1.4, 3.5_
 
-- [ ] 12. Wire together complete analytics dashboard
-  - Integrate all components into a cohesive analytics system
-  - Create main dashboard interface that combines all visualizations
-  - Implement system configuration and deployment scripts
-  - Add comprehensive logging and monitoring throughout the system
-  - Write end-to-end tests that validate the complete user workflow
+- [ ] 12. Deploy and integrate complete Dash analytics dashboard
+  - Integrate all Dash components into a multi-page analytics application
+  - Create main dashboard homepage with key metrics overview and navigation
+  - Implement production deployment configuration for Dash app (Docker/cloud)
+  - Add comprehensive logging, error handling, and performance monitoring
+  - Create user authentication and role-based access if needed
+  - Write end-to-end tests that validate complete dashboard user workflows
   - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1_
